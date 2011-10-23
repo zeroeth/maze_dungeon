@@ -24,9 +24,20 @@ class MazeDungeonsPlugin
     public_command('mazed', 'create a maze', '/maze {width}') do |me, *args|
       $me = me
       generator = MazeDungeons::OrthoGenerator.new
+      error? args[0].to_i > 0, "width must be an integer larger than 0"
+      width = args[0].to_i || 5
+      generator.height = generator.width = width 
       maze = generator.maze
       renderer = MazeDungeons::OrthoRenderer.new(maze)
       renderer.draw_at me.target_block 
+    end
+
+    public_command('typed', 'set the block type', '/typed {type}') do |me, *args|
+      me.target_block.change_type args[0].to_sym
+    end
+
+    public_command('eval', 'woo', '/eval {stuff}') do |me, *args|
+      eval(args.join(" "))
     end
   end
 end
@@ -76,64 +87,83 @@ module MazeDungeons
 
   class OrthoRenderer
     attr_accessor :block_grid
+    attr_accessor :block_size
     attr_accessor :maze
 
     def initialize(maze)
       self.maze = maze
+      self.block_size = 5
     end
 
     def draw_at(target_block)
+      self.block_grid   = Array.new(maze.height*block_size){ Array.new(maze.width*block_size){ Array.new(block_size, :air) } }
       rasterize_grid
       blockit(target_block)
     end
 
     def rasterize_grid
-      
-      $me.msg "rasterize_grid"
-      # put into 2d/3d grid
-      block_size = 5
-      self.block_grid   = Array.new(maze.height*block_size){ Array.new(maze.width*block_size){ Array.new(block_size, :air) } }
-
       maze.grid.each_with_index do |row, cell_y|
-        $me.msg "row #{cell_y}"
         row.each_with_index do |col, cell_x|
-          $me.msg "col #{cell_x}"
-          center_y = cell_y*block_size + 3
-          center_x = cell_x*block_size + 3
+          center_y = cell_y*block_size + 2
+          center_x = cell_x*block_size + 2
+          center_z = 2
+
+          # FIXME use the direction constants with a multiplier
+          west = center_x - 2
+          east = center_x + 2
+
+          north = center_y - 2
+          south = center_y + 2
+
+          top = 4
+          bottom = 0
+
+          fill(west, north, bottom, west, north, top)
+          fill(west, south, bottom, west, south, top)
+          fill(east, north, bottom, east, north, top)
+          fill(east, south, bottom, east, south, top)
 
           if !maze.passage?(cell_x,cell_y, N)
-            fill(center_x-2, center_y-2, 0, center_x+2,center_y-2, 4)
+            fill(west, north, bottom, east, north, top, :wool)
+            # FIXME use directional constants
+            set(center_x, north+1, center_z, :torch)
           end
 
           if !maze.passage?(cell_x,cell_y, S)
-            fill(center_x-2, center_y+2, 0, center_x+2,center_y+2, 4)
+            fill(west, south, bottom, east, south, top, :brick)
+            set(center_x, south-1, center_z, :torch)
           end
 
           if !maze.passage?(cell_x,cell_y, E)
-            fill(center_x+2, center_y-2, 0, center_x+2,center_y+2, 4)
+            fill(east, north, bottom, east, south, top, :wood)
+            set(east-1, center_y, center_z, :torch)
           end
 
           if !maze.passage?(cell_x,cell_y, W)
-            fill(center_x-2, center_y-2, 0, center_x-2,center_y+2, 4)
+            fill(west, north, bottom, west, south, top, :stone)
+            set(west+1, center_y, center_z, :torch)
           end
         end
       end
     end
 
     # fill a cube region
-    def fill(sx,sy,sz,ex,ey,ez)
-      [sy..ey].each do |y|
-        [sx..ex].each do |x|
-          [sz..ez].each do |z|
-            self.block_grid[y][x][z] = :cobblestone
+    def fill(sx,sy,sz,ex,ey,ez, material = :mossy_cobblestone)
+      (sy..ey).each do |y|
+        (sx..ex).each do |x|
+          (sz..ez).each do |z|
+            self.block_grid[y][x][z] = material
           end
         end
       end
     end
 
+    def set(x,y,z, material)
+      self.block_grid[y][x][z] = material
+    end
+
     # render the grid at a specific orientation
     def blockit(target_block)
-      $me.msg "block it"
       start_x = target_block.x
       start_y = target_block.y
       start_z = target_block.z
@@ -141,8 +171,19 @@ module MazeDungeons
 
       block_grid.each_with_index do |row, cell_y|
         row.each_with_index do |col, cell_x|
-          col.each do |cell, cell_z|
-            block = world.block_at(start_x+cell_x, start_y+cell_y, start_z+cell_z)
+          col.each_with_index do |cell, cell_z|
+            # Convert to minecraft coords
+            # local X = minecraft Z
+            # local Y = minecraft X
+            # local Z = minecraft Y
+
+            x = start_z-cell_x # west is inverse
+            y = start_x+cell_y
+            z = start_y+cell_z
+
+            block = world.block_at(y,z,x)
+
+            # TODO make smarter to set material based on world neighbors
             block.change_type cell
           end
         end
