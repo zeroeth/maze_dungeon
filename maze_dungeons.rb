@@ -36,6 +36,11 @@ class MazeDungeonsPlugin
       me.target_block.change_type args[0].to_sym
     end
 
+    public_command('inspect', 'inspect target block', '/inspect') do |me, *args|
+      me.msg me.target_block.to_s
+      me.msg me.target_block.inspect
+    end
+
     public_command('eval', 'woo', '/eval {stuff}') do |me, *args|
       eval(args.join(" "))
     end
@@ -53,7 +58,7 @@ end
 # renderer.render_at(x,y,z)
 
 module MazeDungeons
-  N, S, E, W = 1, 2, 4, 8
+  N, S, E, W, U, D = 1, 2, 4, 8, 16, 32
   DX         = { E => 1, W => -1, N =>  0, S => 0 }
   DY         = { E => 0, W =>  0, N => -1, S => 1 }
   OPPOSITE   = { E => W, W =>  E, N =>  S, S => N }
@@ -123,6 +128,14 @@ module MazeDungeons
           fill(east, north, bottom, east, north, top)
           fill(east, south, bottom, east, south, top)
 
+          if !maze.passage?(cell_x,cell_y, U)
+            fill(west, north, top, east, south, top, :glass)
+          end
+
+          if !maze.passage?(cell_x,cell_y, D)
+            fill(west, north, bottom, east, south, bottom, :stone)
+          end
+
           if !maze.passage?(cell_x,cell_y, N)
             fill(west, north, bottom, east, north, top, :wool)
             # FIXME use directional constants
@@ -140,7 +153,7 @@ module MazeDungeons
           end
 
           if !maze.passage?(cell_x,cell_y, W)
-            fill(west, north, bottom, west, south, top, :stone)
+            fill(west, north, bottom, west, south, top, :sandstone)
             set(west+1, center_y, center_z, :torch)
           end
         end
