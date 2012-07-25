@@ -21,15 +21,28 @@ class MazeDungeonsPlugin
   description 'Maze Dungeon Generator', 0.1
 
   def on_enable
-    public_command('mazed', 'create a maze', '/maze {width}') do |me, *args|
+    public_command('mazed', 'create a maze', '/maze {width} {levels}') do |me, *args|
       $me = me
-      generator = MazeDungeons::OrthoGenerator.new
       error? args[0].to_i > 0, "width must be an integer larger than 0"
       width = args[0].to_i || 5
-      generator.height = generator.width = width 
-      maze = generator.maze
-      renderer = MazeDungeons::OrthoRenderer.new(maze)
-      renderer.draw_at me.target_block 
+
+      error? args[1].to_i > 0, "levels must be an integer larger than 0"
+      levels = args[1].to_i || 1
+
+
+      origin_block = me.target_block
+      origin_block = origin_block.block_at(:down, 4) # spawn in the floor
+
+      levels.times do
+        generator = MazeDungeons::OrthoGenerator.new
+        generator.height = generator.width = width
+
+        renderer = MazeDungeons::OrthoRenderer.new(generator.maze)
+        renderer.draw_at origin_block
+
+        origin_block = origin_block.block_at(:down, renderer.block_size)
+      end
+
     end
 
     public_command('typed', 'set the block type', '/typed {type}') do |me, *args|
@@ -133,7 +146,7 @@ module MazeDungeons
           end
 
           if !maze.passage?(cell_x,cell_y, D)
-            fill(west, north, bottom, east, south, bottom, :stone)
+            fill(west, north, bottom, east, south, bottom, :glass)
           end
 
           if !maze.passage?(cell_x,cell_y, N)
@@ -221,12 +234,17 @@ module MazeDungeons
       self.height = width
       self.mode   = "random"
       self.seed   = rand(0xFFFF_FFFF).to_i
-      self.seed   = 100
       self.generated = false
     end
 
     def maze
       @maze || generate_maze
+    end
+
+    def create_entrance
+    end
+
+    def braid_dead_ends
     end
 
     def generate_maze
