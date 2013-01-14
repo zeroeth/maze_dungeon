@@ -16,6 +16,40 @@
 # "3d" true 3d maze?
 # "plinko" 2d maze turned sideways (with angles to guide you left/right)
 
+require 'rubygems'
+
+puts 'Load path:'
+  $LOAD_PATH.each { |dir| puts "*** (#{dir})" }
+puts '----=-=-=-=-=----'
+puts "((#{Gem.path}))"
+
+require 'theseus'
+puts "!"*20
+puts Theseus::Maze.instance_methods(false).inspect
+puts "^"*20
+
+maze = Theseus::OrthogonalMaze.new height: 10, width: 10
+maze.generate!
+
+# TODO
+#   - include thesus and maze as a jar together
+#   - make easy way to define the maze 'tube' shape. from profile.. using text or
+#     bitmap? corners will be hard.
+#   - maybe a series of slices like a sprite sheet from bottom to top
+#   - make tubes and intersections or make wall sections..
+#     ie - | + L   vs || = etc.
+#
+#   - death star
+#   - glass floors
+#   - hillside slant.. bowl
+#   - ladders w multi height
+#   - bridge on top of walls 2nd maze. (not hard.. just make a new maze and if
+#     there's a wall below use that else draw a bridge, i dont think it needs
+#     to be contstrained to the maze beneath it.
+#   - real '3d' maze
+#   - crazy sphere like the clear ball greg has
+#   - 'torus' maze.
+
 class MazeDungeonsPlugin
   include Purugin::Plugin
   description 'Maze Dungeon Generator', 0.1
