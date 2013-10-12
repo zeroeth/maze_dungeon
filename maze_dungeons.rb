@@ -75,11 +75,25 @@ class MazeDungeonsPlugin
       origin_block = me.target_block
       origin_block = origin_block.block_at(:down, 4) # spawn in the floor
 
+      maze_levels = Array.new
+
       levels.times do
         generator = MazeDungeons::OrthoGenerator.new
-        generator.height = generator.width = width
+        generator.width  = width
+        generator.height = width
+        maze_levels.push generator.maze
+      end
 
-        renderer = MazeDungeons::OrthoRenderer.new(generator.maze, cell_size || 5)
+      maze_levels.each_cons(2) do |levels|
+        x = rand width
+        y = rand width
+
+        levels[0].carve x, y, MazeDungeons::D
+        levels[1].carve x, y, MazeDungeons::U
+      end
+
+      maze_levels.each do |maze_level|
+        renderer = MazeDungeons::OrthoRenderer.new(maze_level, cell_size || 5)
         renderer.draw_at origin_block
 
         origin_block = origin_block.block_at(:down, renderer.block_width)
@@ -189,12 +203,17 @@ module MazeDungeons
           #    From               To              Material
           #     X     Y     Z      X     Y     Z
 
+          # TODO add special gates
           if !maze.passage?(cell_x,cell_y, U)
-            fill(west, north, top, east, south, top, :glass)
+            fill(west, north, top, east, south, top, :cobblestone)
+          else
+            fill(west, north, top, east, south, top, :air)
           end
 
           if !maze.passage?(cell_x,cell_y, D)
-            fill(west, north, bottom, east, south, bottom, :glass)
+            fill(west, north, bottom, east, south, bottom, :cobblestone)
+          else
+            fill(west, north, bottom, east, south, bottom, :air)
           end
 
           if !maze.passage?(cell_x,cell_y, N)
