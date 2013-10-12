@@ -10,6 +10,8 @@
 # TODO
 # random coridoor types, fancy 4-way intersections..
 # glass if tunnel comes in contact with air.. or water/lava
+# proper 'cell' renderer, that can be given a coordinate and render itself.
+# flesh out the orientations once and for all from arrays to world coords
 
 # "2d" woven maze
 # "3d" stacked maze (pick random point as end point to next level
@@ -28,6 +30,7 @@ puts "!"*20
 puts Theseus::Maze.instance_methods(false).inspect
 puts "^"*20
 
+# Test generate maze to prove gem works
 maze = Theseus::OrthogonalMaze.new height: 10, width: 10
 maze.generate!
 
@@ -55,13 +58,18 @@ class MazeDungeonsPlugin
   description 'Maze Dungeon Generator', 0.1
 
   def on_enable
-    public_command('mazed', 'create a maze', '/maze {width} {levels}') do |me, *args|
+    public_command('mazed', 'create a maze', '/mazed {width} {levels} {cell_size=5}') do |me, *args|
       $me = me
       error? args[0].to_i > 0, "width must be an integer larger than 0"
       width = args[0].to_i || 5
 
       error? args[1].to_i > 0, "levels must be an integer larger than 0"
       levels = args[1].to_i || 1
+
+      if args[2]
+        error? args[2].to_i > 0, "cell size must be an integer larger than 0 (ideally larger than 4)"
+        cell_size = args[2].to_i
+      end
 
 
       origin_block = me.target_block
@@ -71,10 +79,10 @@ class MazeDungeonsPlugin
         generator = MazeDungeons::OrthoGenerator.new
         generator.height = generator.width = width
 
-        renderer = MazeDungeons::OrthoRenderer.new(generator.maze)
+        renderer = MazeDungeons::OrthoRenderer.new(generator.maze, cell_size || 5)
         renderer.draw_at origin_block
 
-        origin_block = origin_block.block_at(:down, renderer.block_size)
+        origin_block = origin_block.block_at(:down, renderer.block_width)
       end
 
     end
@@ -124,7 +132,7 @@ module MazeDungeons
     def carve(x,y,value)
       self.grid[y][x] |= value
     end
-    
+
     def passage?(x,y,dir)
       cell(x,y) & dir != 0
     end
@@ -139,41 +147,47 @@ module MazeDungeons
 
   class OrthoRenderer
     attr_accessor :block_grid
-    attr_accessor :block_size
+    attr_accessor :block_width
+    attr_accessor :block_height
     attr_accessor :maze
 
-    def initialize(maze)
+
+    def initialize maze, block_width = 10
       self.maze = maze
-      self.block_size = 5
+      self.block_width  = block_width
+      self.block_height = 10
     end
 
-    def draw_at(target_block)
-      self.block_grid   = Array.new(maze.height*block_size){ Array.new(maze.width*block_size){ Array.new(block_size, :air) } }
+
+    def draw_at target_block
+      self.block_grid = Array.new(maze.height * block_width) do
+                          Array.new(maze.width * block_width) do
+                            Array.new(block_width, :air)
+                          end
+                        end
       rasterize_grid
-      blockit(target_block)
+      blockit target_block
     end
+
 
     def rasterize_grid
       maze.grid.each_with_index do |row, cell_y|
         row.each_with_index do |col, cell_x|
-          center_y = cell_y*block_size + 2
-          center_x = cell_x*block_size + 2
-          center_z = 2
+           west = cell_x * block_width
+           east = cell_x * block_width + block_width-1
+          north = cell_y * block_width
+          south = cell_y * block_width + block_width-1
 
-          # FIXME use the direction constants with a multiplier
-          west = center_x - 2
-          east = center_x + 2
-
-          north = center_y - 2
-          south = center_y + 2
-
-          top = 4
+             top = block_width-1 # FIXME height
           bottom = 0
+            half = block_width/2
 
-          fill(west, north, bottom, west, north, top)
-          fill(west, south, bottom, west, south, top)
-          fill(east, north, bottom, east, north, top)
-          fill(east, south, bottom, east, south, top)
+          center_y = north + half
+          center_x = west  + half
+          center_z = half
+
+          #    From               To              Material
+          #     X     Y     Z      X     Y     Z
 
           if !maze.passage?(cell_x,cell_y, U)
             fill(west, north, top, east, south, top, :glass)
@@ -185,7 +199,6 @@ module MazeDungeons
 
           if !maze.passage?(cell_x,cell_y, N)
             fill(west, north, bottom, east, north, top, :wool)
-            # FIXME use directional constants
             set(center_x, north+1, center_z, :torch)
           end
 
@@ -207,31 +220,35 @@ module MazeDungeons
       end
     end
 
+
     # fill a cube region
     def fill(sx,sy,sz,ex,ey,ez, material = :mossy_cobblestone)
       (sy..ey).each do |y|
         (sx..ex).each do |x|
           (sz..ez).each do |z|
-            self.block_grid[y][x][z] = material
+            set x,y,z, material
           end
         end
       end
     end
 
+
     def set(x,y,z, material)
       self.block_grid[y][x][z] = material
     end
+
 
     # render the grid at a specific orientation
     def blockit(target_block)
       start_x = target_block.x
       start_y = target_block.y
       start_z = target_block.z
+
       world = target_block.world
 
-      block_grid.each_with_index do |row, cell_y|
-        row.each_with_index do |col, cell_x|
-          col.each_with_index do |cell, cell_z|
+      block_grid.each_with_index do |rows, cell_y|
+        rows.each_with_index     do |cols, cell_x|
+          cols.each_with_index   do |cell, cell_z|
             # Convert to minecraft coords
             # local X = minecraft Z
             # local Y = minecraft X
