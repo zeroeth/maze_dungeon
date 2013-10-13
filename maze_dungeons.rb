@@ -7,51 +7,37 @@
 # * And his awesome presentation on them
 #   http://www.jamisbuck.org/presentations/rubyconf2011/index.html
 
-# TODO
-# random coridoor types, fancy 4-way intersections..
-# glass if tunnel comes in contact with air.. or water/lava
-# proper 'cell' renderer, that can be given a coordinate and render itself.
-# flesh out the orientations once and for all from arrays to world coords
-
-# "2d" woven maze
-# "3d" stacked maze (pick random point as end point to next level
-# "3d" true 3d maze?
-# "plinko" 2d maze turned sideways (with angles to guide you left/right)
+puts '        _   _         _             _                 _          _         '
+puts '       /\_\/\_\ _    / /\         /\ \               /\ \       /\ \       '
+puts '      / / / / //\_\ / /  \       /  \ \             /  \ \     /  \ \____  '
+puts '     /\ \/ \ \/ / // / /\ \   __/ /\ \ \           / /\ \ \   / /\ \_____\ '
+puts '    /  \____\__/ // / /\ \ \ /___/ /\ \ \         / / /\ \_\ / / /\/___  / '
+puts '   / /\/________// / /  \ \ \\\\___\/ / / /        / /_/_ \/_// / /   / / /'
+puts '  / / /\/_// / // / /___/ /\ \     / / /        / /____/\  / / /   / / /   '
+puts ' / / /    / / // / /_____/ /\ \   / / /    _   / /\____\/ / / /   / / /    '
+puts '/ / /    / / // /_________/\ \ \  \ \ \__/\_\ / / /______ \ \ \__/ / /     '
+puts '\/_/    / / // / /_       __\ \_\  \ \___\/ // / /_______\ \ \___\/ /      '
+puts '        \/_/ \_\___\     /____/_/   \/___/_/ \/__________/  \/_____/       '
+puts '                                                                           '
 
 require 'rubygems'
+require 'theseus'
 
+
+# Debug info
 puts 'Load path:'
   $LOAD_PATH.each { |dir| puts "*** (#{dir})" }
 puts '----=-=-=-=-=----'
-puts "((#{Gem.path}))"
+puts "(Gem.path: #{Gem.path})"
 
-require 'theseus'
-puts "!"*20
-puts Theseus::Maze.instance_methods(false).inspect
-puts "^"*20
+puts "-"*20
+puts "Theseus Maze methods: #{Theseus::Maze.instance_methods(false).inspect}"
+puts "-"*20
 
 # Test generate maze to prove gem works
 maze = Theseus::OrthogonalMaze.new height: 10, width: 10
 maze.generate!
 
-# TODO
-#   - include thesus and maze as a jar together
-#   - make easy way to define the maze 'tube' shape. from profile.. using text or
-#     bitmap? corners will be hard.
-#   - maybe a series of slices like a sprite sheet from bottom to top
-#   - make tubes and intersections or make wall sections..
-#     ie - | + L   vs || = etc.
-#
-#   - death star
-#   - glass floors
-#   - hillside slant.. bowl
-#   - ladders w multi height
-#   - bridge on top of walls 2nd maze. (not hard.. just make a new maze and if
-#     there's a wall below use that else draw a bridge, i dont think it needs
-#     to be contstrained to the maze beneath it.
-#   - real '3d' maze
-#   - crazy sphere like the clear ball greg has
-#   - 'torus' maze.
 
 class MazeDungeonsPlugin
   include Purugin::Plugin

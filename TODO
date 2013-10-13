@@ -1,0 +1,29 @@
+# TODO
+# random coridoor types, fancy 4-way intersections..
+# glass if tunnel comes in contact with air.. or water/lava
+# proper 'cell' renderer, that can be given a coordinate and render itself.
+# flesh out the orientations once and for all from arrays to world coords
+
+# "2d" woven maze
+# "3d" stacked maze (pick random point as end point to next level
+# "3d" true 3d maze?
+# "plinko" 2d maze turned sideways (with angles to guide you left/right)
+
+# TODO
+#   - include thesus and maze as a jar together
+#   - make easy way to define the maze 'tube' shape. from profile.. using text or
+#     bitmap? corners will be hard.
+#   - maybe a series of slices like a sprite sheet from bottom to top
+#   - make tubes and intersections or make wall sections..
+#     ie - | + L   vs || = etc.
+#
+#   - death star
+#   - glass floors
+#   - hillside slant.. bowl
+#   - ladders w multi height
+#   - bridge on top of walls 2nd maze. (not hard.. just make a new maze and if
+#     there's a wall below use that else draw a bridge, i dont think it needs
+#     to be contstrained to the maze beneath it.
+#   - real '3d' maze
+#   - crazy sphere like the clear ball greg has
+#   - 'torus' maze.
