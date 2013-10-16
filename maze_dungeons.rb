@@ -23,7 +23,7 @@ puts '                                                                          
 require 'rubygems'
 
 begin
-  require File.join( File.dirname(__FILE__), 'mazed-gems.jar')
+  require File.join( File.dirname(__FILE__), 'lib', 'mazed-gems.jar')
   puts "mazed-gems.jar included in $LOAD_PATH"
 rescue LoadError => e
   puts "WARNING: mazed-gems.jar not found, will only find dependencies in your GEM_PATH"
