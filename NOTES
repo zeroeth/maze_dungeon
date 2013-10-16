@@ -1,0 +1,28 @@
+#  io = Class.java_class.getResourceAsStream(f)
+#  puts "INTERNAL PLUGIN: #{f.inspect}"
+#  plugin_manager.load_plugin io
+
+#stream = Class.java_class.getResourceAsStream("/plugins/maze_dungeons.rb")
+#tempFile = java.io.File.createTempFile("maze_dungeon", "rb")
+#out = java.io.FileOutputStream.new(tempFile)
+#org.apache.commons.io.IOUtils.copy(stream, out);
+#puts "DAT FILE: #{tempFile.inspect}"
+
+#plugin_manager.load_plugin_stream stream
+
+
+# Things Learned
+# - install gems into a folder with -i as shown http://blog.nicksieger.com/articles/2009/01/10/jruby-1-1-6-gems-in-a-jar/
+# - adding gems into purugin src/main/resources folder makes them available for including
+# - to load internal 'purugin plugins' simply use a 'require' from purugin.rb
+@internal_purugins_glob = File.join(File.dirname(__FILE__), "plugins", "*.rb")
+Dir[@internal_purugins_glob].each do |file_name|
+  require file_name
+end
+
+# - adding gems into a vanille jar they can be referenced like this
+require 'rubygems'
+require File.join( File.dirname(__FILE__), 'mazed-gems.jar')
+require 'theseus'
+
+# - TODO silence plugin.yml complaint:w

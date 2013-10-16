@@ -27,3 +27,12 @@
 #   - real '3d' maze
 #   - crazy sphere like the clear ball greg has
 #   - 'torus' maze.
+
+NOTES
+- Stored gems inside jars classpath
+- Loaded purugin from jar requiring rubygems
+
+NEXT
+- create a contained jar.. with purugin + jar that gets loaded
+- or, create a jar with the gems and then have the rb file include it in the path
+

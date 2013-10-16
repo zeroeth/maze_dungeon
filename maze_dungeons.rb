@@ -21,22 +21,21 @@ puts '        \/_/ \_\___\     /____/_/   \/___/_/ \/__________/  \/_____/      
 puts '                                                                           '
 
 require 'rubygems'
-require 'theseus'
 
+begin
+  require File.join( File.dirname(__FILE__), 'mazed-gems.jar')
+  puts "mazed-gems.jar included in $LOAD_PATH"
+rescue LoadError => e
+  puts "WARNING: mazed-gems.jar not found, will only find dependencies in your GEM_PATH"
+end
 
-# Debug info
-puts 'Load path:'
-  $LOAD_PATH.each { |dir| puts "*** (#{dir})" }
-puts '----=-=-=-=-=----'
-puts "(Gem.path: #{Gem.path})"
+begin
+  require 'theseus'
+rescue LoadError => e
+  puts "ERROR #{e.message.upcase}, Please install 'theseus' via rubygems, Bundler, or make sure 'mazed-jems.jar' is in your ./Plugins folder"
+  abort
+end
 
-puts "-"*20
-puts "Theseus Maze methods: #{Theseus::Maze.instance_methods(false).inspect}"
-puts "-"*20
-
-# Test generate maze to prove gem works
-maze = Theseus::OrthogonalMaze.new height: 10, width: 10
-maze.generate!
 
 
 class MazeDungeonsPlugin
